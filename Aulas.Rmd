@@ -1,0 +1,432 @@
+---
+title: "Aulas"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Getting and cleaning data
+
+
+## Semana 3
+
+```{r}
+
+```
+
+
+
+
+**Geting the data from the web (Baltimore restaurents)**
+
+```{r}
+if(!file.exists("./data")){dir.create("./data")}
+fileUrl <- "https://data.baltimorecity.gov/api/views/k5ry-ef3g/rows.csv?accessType=DOWNLOAD"
+download.file(fileUrl, destfile = "./data/restaurants.csv", method = "curl")
+restData <- read.csv("./data/restaurants.csv")
+
+
+```
+
+
+
+**Summarizing data**
+
+
+```{r}
+head(restData, n=3)
+
+tail
+
+summary
+
+str
+
+quantile
+
+table (restData$colname, useNA = "ifany")
+# Se tiver NA faz coluna com contagem deles
+
+```
+
+
+
+**Missing**:  
+
+
+```{r}
+sum(is.na(restData$colname)) OR any(is.na(...)) 
+
+ all(restData$colname > 0)
+
+ colSums(is.na(restData)) 
+
+ all(colSums(is.na(restData)) == 0)
+
+```
+
+
+**Values with specific characteristics**
+
+
+```{r}
+table(restData$colnome %in% c("21212"))
+
+table(restData$colnome %in% c("21212", "21213"))
+# igual um ou outro
+# dá número de casos
+
+
+restData [restData$colnome %in% c("21212", "21213")]
+# mostra os casos
+
+
+
+```
+
+**Cross tables**
+
+```{r}
+xt <- xtable(Freq ~ Gender + Admit, data=restData)
+xt
+
+```
+
+
+**Flat tables**
+
+
+```{r}
+warpbreaks$replicate <- rep(1:9, len =54)
+xt = xtable (breaks ~. , data=warpbreaks)
+xt
+
+ftable(xt)
+```
+
+**Size**
+
+
+```{r}
+fakedata = rnorm(1e5)
+object.size(fakedata)
+
+print (object.size(fakedata), units = "Mb")
+```
+
+
+## New variables
+
+**Geting the data from the web (Baltimore restaurents)**
+
+```{r}
+if(!file.exists("./data")){dir.create("./data")}
+fileUrl <- "https://data.baltimorecity.gov/api/views/k5ry-ef3g/rows.csv?accessType=DOWNLOAD"
+download.file(fileUrl, destfile = "./data/restaurants.csv", method = "curl")
+restData <- read.csv("./data/restaurants.csv")
+
+
+```
+
+**Creating sequence**
+
+```{r}
+s1 <- seq(1,10,by=2) ; s1
+
+s2 <- seq(1,10, length=3) ; s2
+
+x <- c(1,3,8,25,100) ; seq(along = x)
+#vetor de indices
+
+```
+
+**Subsetting variables**
+
+
+```{r}
+restData$new =restData$colnome %in% c("text1", "text2")
+
+table (restData$new)
+#faz FALSE e TRUE
+
+
+restData$zipWrong = ifelse(restData$zipCode < 0, TRUE, FALSE)
+
+table(restData$zipWrong, restData$zipCode < 0)
+#variavel binária
+
+
+```
+
+
+**Categorical variables**
+
+
+```{r}
+restData$zipGroups = cut(restData$zipCode, breaks = quantile(restData$zipCode))
+
+table (restData$zipGroups)
+#4grupos: (0-25%), (25-50%), (50-75%), (75-100%)
+
+table (restData$zipGroups, restData$zipCode)
+
+library (Hmisc)
+restData$zipGroups = cut2(restData$zipCode, g= 4)
+table (restData$zipGroups)
+#mesma coisa
+
+```
+
+
+**Factor variables**
+
+
+```{r}
+restData$zcf <- factor (restData$zipCode)
+#transforma de quantitativo para fator
+
+restData$zcf[1:10]
+
+class(restData$zcf)
+
+
+```
+
+**Levels of Factor Variable**
+
+
+```{r}
+yesno <- sample(c("yes","no"), size = 10, replace = TRUE)
+yesnofac = factor(yesno, levels = c("yes","no"))
+relevel(yesnofac, ref="yes")
+
+
+as.numeric(yesnofac)
+
+```
+
+**Cutting produces factor variables**
+
+```{r}
+library(Hmisc)
+restData$zipGroups = cut2(restData$zipCode, g=1)
+
+table(restData$zipGroups)
+
+```
+
+
+**Using the mutate function**
+
+```{r}
+library(Hmisc); library(plyr)
+
+restData2 = mutate(restData, zipGroups = cut2(zipCode, g = 4))
+
+table(restData2$zipGroups)
+
+```
+
+**Common Transforms**
+
+```{r}
+
+x <- 3.475
+n <- 2
+
+abs(x)
+#valor absoluto
+
+sqtr(x)
+#raiz quadrada
+
+ceiling(x)
+#ceiling(3,475) is 4
+
+floor(x)
+#floor(3.475) is 3
+
+round(x, digits = n)
+
+signif(x, digits = n)
+
+cos(x)
+sin(x)
+
+log(x)
+#natural logarithm
+
+log2(x)
+log10(x)
+
+exp(x)
+#exponential
+
+```
+
+
+##Reshaping
+
+
+```{r}
+library(reshape2)
+head(mtcars)
+
+mtcars$carname <- rownames(mtcars)
+
+carMelt <- melt(mtcars, id=c("carname", "gear", "cyl"), mesures.vars=c("mpg", "hp"))
+
+head(carMelt, n=3)
+
+
+tail(carMelt, n=3)
+
+```
+
+
+
+
+```{r}
+cylData <- dcast(carMelt, cyl ~ variable)
+#numero de medidas por celindros
+cylData
+
+
+cylData <- dcast(carMelt, cyl ~ variable, mean)
+#media de valor por celindros
+cylData
+
+```
+
+**Averaging values**
+
+
+```{r}
+head(InsectSprays)
+
+tapply(InsectSprays$count, InsectSprays$spray, sum)
+# soma da contagem de insetos por spray (A, B, etc)
+
+
+
+# ANOTHER WAY - SPLIT:
+
+spIns <- split(InsectSprays$count, InsectSprays$spray)
+
+spIns
+
+sprCount <- lapply(spIns, sum)
+
+sprCount
+
+unlist(sprCount)
+
+sapply(spIns, sum)
+```
+
+
+
+
+
+```{r}
+library(plyr)
+
+ddply(InsectSprays,.(spray),summarize,sum=sum(count))
+# (dados,.(variavel de interesse sem aspas), o que fazer, como fazer) 
+
+spraySums <- ddply(InsectSprays,.(spray),summarize,sum=ave(count, FUN=sum))
+
+dim(spraySums)
+
+head(spraySums)
+
+
+
+```
+
+##Managing Data Frames with dplyr
+
+select - subset de colunas
+
+filter - subset de linhas (baseado em condiçõe logicas)
+
+arrange - reorganiza linhas
+
+rename
+
+mutate - add novas variaveis/colunas ou transforma as que existem
+
+summarise
+
+
+
+
+```{r}
+chicago <- readRDS("chicago.rds")
+
+dim(chicago)
+
+str(chicago)
+
+names(chicago)
+
+head(select(chicago, city:dptp)) #colunas de city a dptp
+
+head(select(chicago, -(city:dptp))) #colunas fora de city a dptp
+
+i <- match("city", names(chicago))
+j <- match("dptp", names(chicago))
+head(chicago[,-(i:j)])
+
+
+chic.f <- filter(chicago, pm25tmean2 >30)
+head(chic.f, 10)
+
+chic.f <- filter(chicago, pm25tmean2 >30 & tmpd >80)
+head(chic.f, 10)
+
+chicago <- arrange(chicago, date) 
+#organizar do mais antigo ao mais recente
+head(chicago)
+tail(chicago)
+
+chicago <- rename(chicago, pm25 = pm25tmean2, dewpoint = dptp)
+#renomear: novo nome antes, antigo depois
+head(chicago)
+
+chicago <- mutate(chicago, pm25detrend = pm25-mean(pm25, na.rm = TRUE))
+head(select(chicago,pm25, pm25detrend))
+
+
+chicago <- mutate(chicago, tempcat = factor(1 * (tmpd > 80), labes = c("cold", "hot")))
+hotcold <- group_by(chicago, tempcat)
+hotcold
+
+
+summarize(hotcold, pm25 = mean(pm25), o3 = max(o3tmean2), no2 = median(no2tmean2))
+
+summarize(hotcold, pm25 = mean(pm25, na.rm = TRUE), o3 = max(o3tmean2), no2 = median(no2tmean2))
+
+chicago <- mutate(chicago, year = as.POSIXlt(date)$year + 1900)
+years <- group_by(chicago, year)
+summarize(years, pm25 = mean(pm25, na.rm = TRUE), o3 = max(o3tmean2), no2 = median(no2tmean2))
+
+
+chicago %>% mutate(month = as.POSIXlt(date)$mon +1) %>% group_by(month) %>% summarize(pm25 = mean(pm25, na.rm = TRUE), o3 = max(o3tmean2), no2 = median(no2tmean2))
+
+```
+
+#Merging
+
+#Exercises in swirl
+
+```{r}
+
+
+
+
+
+```
